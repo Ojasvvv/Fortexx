@@ -41,7 +41,7 @@ int main() {
 
     // The name of the file to create on your hard drive.
 
-    
+
 
     // CRITICAL: Reload the image to get the "compressed" pixels for signing
     // This ensures the Verifier sees the exact same pixel data.
@@ -55,12 +55,12 @@ int main() {
     EVP_PKEY *priv_key = PEM_read_PrivateKey(priv_key_file, NULL, NULL, NULL);
     fclose(priv_key_file);
 
-    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new(); // Allocate memory for the calculation
     size_t sig_len;
     unsigned char *sig = NULL;
 
-    if (EVP_DigestSignInit(md_ctx, NULL, EVP_sha256(), NULL, priv_key) <= 0) handle_errors();
-    if (EVP_DigestSignUpdate(md_ctx, saved_pixels, pixel_size) <= 0) handle_errors();
+    if (EVP_DigestSignInit(md_ctx, NULL, EVP_sha256(), NULL, priv_key) <= 0) handle_errors(); // Configure this memory to run SHA-256.
+    if (EVP_DigestSignUpdate(md_ctx, saved_pixels, pixel_size) <= 0) handle_errors(); // Push the pixels into the calculation
     
     // Determine buffer size for signature
     if (EVP_DigestSignFinal(md_ctx, NULL, &sig_len) <= 0) handle_errors();
