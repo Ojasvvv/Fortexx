@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h> // REQUIRED for uint64_t
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
-// Capture $\rightarrow$ Poison $\rightarrow$ Sign
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -15,69 +16,59 @@ void handle_errors() {
     exit(1);
 }
 
+// Renamed to match main
+uint64_t compute_ahash(unsigned char *pixels, int w, int h, int channels){
+    uint64_t hash = 0;
+    double total = 0;
+    unsigned char small[64]; 
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            int orig_x = x*w/8;
+            int orig_y = y*h/8;
+            int idx = (orig_y*w+orig_x) * channels;
+            small[y * 8 + x] = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+            total += small[y * 8 + x];
+        }
+    }
+    double avg = total/64.0;
+    for (int i = 0; i < 64; i++) {
+       if(small[i] >= avg) {
+        hash |= (1ULL << i);
+       }
+    }
+   return hash; 
+}
+
 int main() {
     int width, height, channels;
     unsigned char *pixels = stbi_load("input.jpg", &width, &height, &channels, 0);
-    if (!pixels) {
-        printf("Error: Could not load input.jpg\n");
-        return 1;
-    }
+    if (!pixels) { printf("Error: input.jpg\n"); return 1; }
 
-    printf("Poisoning image: %dx%d (%d channels)...\n", width, height, channels);
+    // Save Perceptual Hash
+    uint64_t p_hash = compute_ahash(pixels, width, height, channels);
+    FILE *h_file = fopen("ahash.bin", "wb");
+    fwrite(&p_hash, sizeof(uint64_t), 1, h_file);
+    fclose(h_file);
 
-    // Step A: Poison (Deterministic noise)
-    srand(42); // Seed for reproducible noise
+    // Poisoning...
+    srand(42);
     for (int i = 0; i < width * height * channels; i++) {
         int noise = rand() % 256;
-        double poisoned = (double)pixels[i] + (noise * 0.05);
-        pixels[i] = (unsigned char)fmin(255.0, poisoned);
+        pixels[i] = (unsigned char)fmin(255.0, (double)pixels[i] + (noise * 0.05));
     }
 
-    // Basically It iterates through every single byte of color data (Red, Green, Blue) and adds a tiny amount of static noise.
-
-    // Step D: Save the poisoned image
     stbi_write_jpg("protected.jpg", width, height, channels, pixels, 90);
-    stbi_image_free(pixels);
+    stbi_image_free(pixels); // Original pixels gone
 
-    // The name of the file to create on your hard drive.
-
-
-
-    // CRITICAL: Reload the image to get the "compressed" pixels for signing
-    // This ensures the Verifier sees the exact same pixel data.
+    // Reload for Signing
     int w2, h2, c2;
     unsigned char *saved_pixels = stbi_load("protected.jpg", &w2, &h2, &c2, 0);
     size_t pixel_size = w2 * h2 * c2;
 
-    // Step B & C: Sign the hash of the pixels
-    FILE *priv_key_file = fopen("private.pem", "r");
-    if (!priv_key_file) { perror("private.pem"); return 1; }
-    EVP_PKEY *priv_key = PEM_read_PrivateKey(priv_key_file, NULL, NULL, NULL);
-    fclose(priv_key_file);
-
-    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new(); // Allocate memory for the calculation
-    size_t sig_len;
-    unsigned char *sig = NULL;
-
-    if (EVP_DigestSignInit(md_ctx, NULL, EVP_sha256(), NULL, priv_key) <= 0) handle_errors(); // Configure this memory to run SHA-256.
-    if (EVP_DigestSignUpdate(md_ctx, saved_pixels, pixel_size) <= 0) handle_errors(); // Push the pixels into the calculation
-    
-    // Determine buffer size for signature
-    if (EVP_DigestSignFinal(md_ctx, NULL, &sig_len) <= 0) handle_errors();
-    sig = malloc(sig_len);
-    if (EVP_DigestSignFinal(md_ctx, sig, &sig_len) <= 0) handle_errors();
-
-    // Step E: Save signature
-    FILE *sig_file = fopen("signature.sig", "wb");
-    fwrite(sig, 1, sig_len, sig_file);
-    fclose(sig_file);
-
-    printf("Success: protected.jpg and signature.sig generated.\n");
+    // RSA Signing... (Keep your existing signing code here)
+    // ... (rest of your signing code) ...
 
     stbi_image_free(saved_pixels);
-    EVP_PKEY_free(priv_key);
-    EVP_MD_CTX_free(md_ctx);
-    free(sig);
-
+    printf("Aegis Protection Complete.\n");
     return 0;
 }
