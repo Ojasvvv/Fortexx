@@ -15,7 +15,7 @@ If you just want to demo the app and don't care if the "Device Identity" changes
 5.  Use these settings:
     - **Runtime**: Python 3
     - **Build Command**: `pip install -r requirements.txt`
-    - **Start Command**: `gunicorn server:app`
+    - **Start Command**: `gunicorn --timeout 600 server:app`
 5.  Click **Create Web Service**.
 
 ### Option B: Persistent Keys (Real Usage)
@@ -72,3 +72,10 @@ Hemlock uses `imageio` which often needs `ffmpeg`.
 - You do **not** need to host the HTML separately (e.g., on Vercel or Netlify).
 - The Python backend (`server.py`) is configured to serve your `ui/index.html` file as the main page.
 - When you deploy this repository, you get both the API and the Website in one URL.
+
+### 3. Why is it slower than my laptop?
+**Video processing is CPU-heavy.**
+- **Your Computer**: Likely has 4-8 powerful CPU cores.
+- **Render Free Tier**: Has **0.1 vCPU** (a tiny fraction of one core).
+- **Result**: Hashing a video frame-by-frame will be ~10-20x slower on the free tier.
+- **Fix**: To get native speed, you need a "Compute Optimized" instance or a VPS with dedicated CPU cores.
