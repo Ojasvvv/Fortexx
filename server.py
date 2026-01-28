@@ -56,7 +56,7 @@ if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('../DeveloperUI', 'index.html')
+    return send_from_directory('ui', 'index.html')
 
 @app.route('/api/protect', methods=['POST'])
 def protect_media():

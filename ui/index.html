@@ -143,8 +143,10 @@
 
                 <!-- Nav -->
                 <nav class="hidden md:flex gap-8 text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
-                    <button class="hover:text-white transition-colors cursor-not-allowed opacity-50">Manifesto</button>
-                    <button class="hover:text-white transition-colors cursor-not-allowed opacity-50">Protocol</button>
+                    <a href="https://github.com/Ojasvvv/Fortex" target="_blank"
+                        class="hover:text-white transition-colors">Manifesto</a>
+                    <a href="https://github.com/Ojasvvv/Fortex" target="_blank"
+                        class="hover:text-white transition-colors">Protocol</a>
                     <div class="flex items-center gap-2 text-zinc-400">
                         <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                         <span>System Online</span>
@@ -246,24 +248,30 @@
                                 </div>
                             </div>
 
-                            <!-- TAB 2: PIPELINE (Vertical) -->
-                            <div id="tab-pipeline" class="tab-content hidden space-y-8">
-                                <div class="p-6 rounded-2xl bg-white/5 border border-white/5">
-                                    <div class="text-blue-400 mb-2 font-mono text-xs">01 // SCAN</div>
-                                    <h3 class="text-lg text-white font-medium mb-1">Vulnerability Analysis</h3>
-                                    <p class="text-sm text-zinc-400">Identifies texture regions prone to latent space
-                                        decoding.</p>
+                            <!-- TAB 2: PIPELINE (Vertical -> Minimal Grid) -->
+                            <div id="tab-pipeline" class="tab-content hidden grid grid-cols-1 gap-12">
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">01 //
+                                        SCAN</span>
+                                    <h3 class="text-white text-2xl font-medium">Vulnerability Analysis</h3>
+                                    <p class="text-sm text-zinc-400 leading-relaxed">
+                                        Identifies texture regions most susceptible to latent space decoding.
+                                    </p>
                                 </div>
-                                <div class="p-6 rounded-2xl bg-white/5 border border-white/5">
-                                    <div class="text-red-400 mb-2 font-mono text-xs">02 // INJECT</div>
-                                    <h3 class="text-lg text-white font-medium mb-1">Noise Projection</h3>
-                                    <p class="text-sm text-zinc-400">Injects adversarial perturbations into high-freq
-                                        bands.</p>
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">02 //
+                                        INJECT</span>
+                                    <h3 class="text-white text-2xl font-medium">Noise Projection</h3>
+                                    <p class="text-sm text-zinc-400 leading-relaxed">
+                                        Injects adversarial perturbations into high-frequency bands to disrupt training.
+                                    </p>
                                 </div>
-                                <div class="p-6 rounded-2xl bg-white/5 border border-white/5">
-                                    <div class="text-green-400 mb-2 font-mono text-xs">03 // SIGN</div>
-                                    <h3 class="text-lg text-white font-medium mb-1">Digital Signature</h3>
-                                    <p class="text-sm text-zinc-400">Hashes and signs the final asset for provenance.
+                                <div class="flex flex-col gap-2">
+                                    <span class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">03 //
+                                        SIGN</span>
+                                    <h3 class="text-white text-2xl font-medium">Digital Signature</h3>
+                                    <p class="text-sm text-zinc-400 leading-relaxed">
+                                        Hashes and signs the final asset for immutable provenance.
                                     </p>
                                 </div>
                             </div>
@@ -324,37 +332,62 @@
 
     <!-- VIEW 2: APP (The "Tool") -->
     <main id="app-view"
-        class="absolute inset-0 w-full h-full bg-[#0B0C0E] z-30 flex flex-col items-center justify-center opacity-0 translate-y-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none">
+        class="absolute inset-0 w-full h-full z-30 flex flex-col items-center justify-center opacity-0 translate-y-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none">
 
-        <!-- Back Button -->
-        <button id="backBtn"
-            class="absolute top-12 left-8 md:left-12 text-xs font-medium text-zinc-500 hover:text-white transition-colors uppercase tracking-wider flex items-center gap-2 z-50">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back
-        </button>
+        <!-- APP HEADER (Common Layout) -->
+        <header class="absolute top-0 left-0 w-full z-50 px-8 md:px-12 py-8 flex justify-between items-start">
+            <!-- Logo -->
+            <div class="flex flex-col gap-1 z-10 w-48">
+                <span class="text-xl font-bold tracking-[0.2em] text-white uppercase">HEMLOCK</span>
+                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Verifiable Media
+                    Engine</span>
+            </div>
+
+            <!-- DECORATION: SVG Pattern (Consistent) -->
+            <div
+                class="hidden xl:block absolute left-64 top-9 opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.2s_forwards]">
+                <svg width="800" height="40" viewBox="0 0 800 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 20H800" stroke="white" stroke-opacity="0.05" stroke-dasharray="2 4" />
+                    <path d="M200 10V30 M400 0V40 M600 10V30" stroke="white" stroke-opacity="0.1" />
+                    <circle cx="400" cy="20" r="2" fill="white" fill-opacity="0.5" />
+                    <rect x="380" y="16" width="2" height="8" fill="white" fill-opacity="0.3" />
+                    <rect x="418" y="16" width="2" height="8" fill="white" fill-opacity="0.3" />
+                </svg>
+            </div>
+
+            <!-- Back Button (Right Aligned) -->
+            <button id="backBtn"
+                class="flex items-center gap-2 text-[11px] font-mono text-zinc-500 hover:text-white transition-colors uppercase tracking-widest cursor-pointer z-50">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Back to Home</span>
+            </button>
+        </header>
 
         <!-- CENTRAL CONTAINER -->
-        <div class="w-full max-w-6xl px-6 flex flex-col items-center justify-center relative">
+        <div class="w-full max-w-6xl px-6 flex flex-col items-center justify-center relative z-50">
 
             <!-- Header -->
             <div class="text-center mb-10">
                 <!-- TOGGLE SWITCH -->
-                <div class="inline-flex bg-white/5 p-1 rounded-full mb-6 border border-white/10">
+                <div class="inline-flex bg-white/5 p-1 rounded-full mb-6 border border-white/10 relative z-[100]">
                     <button id="modeSign"
-                        class="w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center">Sign</button>
+                        class="w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center cursor-pointer relative z-[100]">Sign</button>
                     <button id="modeVerify"
-                        class="w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center">Verify</button>
+                        class="w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-[100]">Verify</button>
                 </div>
 
                 <h2 class="text-2xl font-medium text-white tracking-tight" id="appTitle">Injection Console</h2>
             </div>
 
+            <!-- (Rest of content) -->
+
             <!-- SPLIT LAYOUT CARD -->
             <div
                 class="w-full bg-[#131416] border border-white/5 rounded-2xl overflow-hidden relative shadow-2xl transition-all duration-500 group grid grid-cols-1 md:grid-cols-2 h-[550px]">
+
 
                 <!-- LEFT COL: IMAGE INTERACTION -->
                 <div class="relative border-r border-white/5 bg-[#0B0C0E]/50 flex flex-col">
@@ -406,6 +439,12 @@
                             <pre id="keyDisplay"
                                 class="font-mono text-[10px] text-zinc-500 break-all whitespace-pre-wrap h-full overflow-y-auto">Waiting for generation...</pre>
                         </div>
+
+                        <button
+                            class="w-full py-3 rounded-lg bg-white text-ink-950 text-sm font-medium hover:bg-zinc-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] opacity-50 pointer-events-none"
+                            id="downloadBtn">
+                            Download Signed Asset
+                        </button>
 
                         <button
                             class="resetAction w-full py-3 rounded-lg border border-white/10 text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-all opacity-50 pointer-events-none"
@@ -486,14 +525,27 @@
         const backBtn = document.getElementById('backBtn');
 
         enterBtn.addEventListener('click', () => {
+            // Animation
             landingView.style.transform = 'translateY(-100%)';
-            appView.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            landingView.classList.add('pointer-events-none');
+            // Z-Index Swap (Crucial for clicking)
+            landingView.classList.remove('z-40');
+            landingView.classList.add('z-30');
+
+            appView.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none', 'z-30');
+            appView.classList.add('z-50');
+
             window.history.pushState({}, '', '/#app');
         });
 
         backBtn.addEventListener('click', () => {
             landingView.style.transform = 'translateY(0)';
-            appView.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+            landingView.classList.remove('pointer-events-none', 'z-30');
+            landingView.classList.add('z-40');
+
+            appView.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none', 'z-30');
+            appView.classList.remove('z-50');
+
             window.history.pushState({}, '', '/');
         });
 
@@ -522,11 +574,13 @@
         const verifyDetails = document.getElementById('verifyDetails');
 
         const signResetBtn = document.getElementById('signResetBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
         const verifyInputSection = document.getElementById('verifyInputSection');
         const verifyResetBtn = document.getElementById('verifyResetBtn');
 
         // Toggle Logic
         let currentMode = 'sign';
+        let currentDownloadUrl = null;
         const modeSign = document.getElementById('modeSign');
         const modeVerify = document.getElementById('modeVerify');
 
@@ -534,8 +588,8 @@
             currentMode = mode;
             if (mode === 'sign') {
                 // Button Styles
-                modeSign.className = "w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center";
-                modeVerify.className = "w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center";
+                modeSign.className = "w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center cursor-pointer relative z-[100]";
+                modeVerify.className = "w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-[100]";
                 appTitle.textContent = "Injection Console";
 
                 // Content Visibility
@@ -543,8 +597,8 @@
                 verifyInfo.classList.add('hidden', 'opacity-0', 'translate-x-8', 'absolute');
             } else {
                 // Button Styles
-                modeVerify.className = "w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center";
-                modeSign.className = "w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center";
+                modeVerify.className = "w-36 h-10 rounded-full text-sm font-medium text-ink-950 bg-white transition-all shadow-sm flex items-center justify-center cursor-pointer relative z-[100]";
+                modeSign.className = "w-36 h-10 rounded-full text-sm font-medium text-zinc-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-[100]";
                 appTitle.textContent = "Verification Engine";
 
                 // Content Visibility
@@ -559,6 +613,7 @@
 
         function resetUI() {
             pendingFile = null;
+            currentDownloadUrl = null;
             // Reset Left Column
             resultState.classList.add('opacity-0', 'pointer-events-none');
             uploadState.classList.remove('opacity-0', 'pointer-events-none');
@@ -585,6 +640,7 @@
 
             // Reset Right Column (Sign)
             signResetBtn.classList.add('opacity-50', 'pointer-events-none');
+            downloadBtn.classList.add('opacity-50', 'pointer-events-none');
             keyDisplay.textContent = "Waiting for generation...";
 
             // Reset Right Column (Verify)
@@ -597,6 +653,18 @@
 
         signResetBtn.addEventListener('click', resetUI);
         verifyResetBtn.addEventListener('click', resetUI);
+
+        // Download Handler
+        downloadBtn.addEventListener('click', () => {
+            if (currentDownloadUrl) {
+                const a = document.createElement('a');
+                a.href = currentDownloadUrl;
+                a.download = 'hemlock_signed_asset';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        });
 
         // Manual Verify Trigger
         verifyActionBtn.addEventListener('click', async () => {
@@ -670,6 +738,10 @@
 
                 keyDisplay.textContent = keyData.key || "Key unavailable";
                 signResetBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+                // Enable Download
+                currentDownloadUrl = url;
+                downloadBtn.classList.remove('opacity-50', 'pointer-events-none');
 
             } catch (error) {
                 console.error(error);
