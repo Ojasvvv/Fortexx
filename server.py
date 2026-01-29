@@ -15,6 +15,7 @@ try:
     import video_verify
     import image_sign
     import image_verify
+    from job_manager import job_manager
     VIDEO_BACKEND_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Video backend not available: {e}")
@@ -65,6 +66,51 @@ def serve_index():
 def serve_provenance(filename):
     return send_from_directory('provenance', filename)
 
+@app.route('/input/<path:filename>')
+def serve_input(filename):
+    # Determine mimetype based on extension
+    ext = os.path.splitext(filename)[1].lower()
+    mimetype = 'application/octet-stream'
+    if ext in ['.jpg', '.jpeg', '.png']:
+        mimetype = 'image/jpeg'
+    elif ext in ['.mp4', '.mov']:
+        mimetype = 'video/mp4'
+    return send_from_directory('.', filename, mimetype=mimetype)
+
+# --- JOB HELPERS ---
+def process_protect_async(input_path, mimetype):
+    try:
+        if mimetype == 'image/jpeg':
+             image_sign.sign_image(input_path)
+        else:
+             video_sign.sign_video(input_path)
+        return {"file_path": input_path, "mimetype": mimetype}
+    except Exception as e:
+        raise e
+
+def process_verify_async(input_path, mimetype, verify_key_path):
+    try:
+        if mimetype == 'image/jpeg':
+            report = image_verify.verify_image(input_path, public_key_path=verify_key_path)
+        else:
+            report = video_verify.verify_video(input_path, public_key_path=verify_key_path)
+        
+        status = report.get('status', 'UNKNOWN')
+        if status == "FAILED":
+             status = "TAMPERED"
+             
+        return {'status': status, 'details': report}
+    except Exception as e:
+        # Return a structure similar to success but with error status
+        return {'status': 'TAMPERED', 'details': str(e)}
+
+@app.route('/api/jobs/<job_id>', methods=['GET'])
+def get_job_status(job_id):
+    job = job_manager.get_job(job_id)
+    if not job:
+        return {'error': 'Job not found'}, 404
+    return job
+
 @app.route('/api/protect', methods=['POST'])
 def protect_media():
     if 'file' not in request.files:
@@ -86,23 +132,19 @@ def protect_media():
         
     # Save input
     input_path = os.path.join(BASE_DIR, f'input{ext}')
+    
+    # We rename input file with UUID to avoid collision in concurrent jobs (optional but good practice)
+    # For now, keeping "input.mp4" means race condition if 2 users upload same ext.
+    # FIX: Use unique filename for Job Mode
+    import uuid
+    unique_filename = f"input_{uuid.uuid4().hex}{ext}"
+    input_path = os.path.join(BASE_DIR, unique_filename)
+    
     file.save(input_path)
     
-    try:
-        # Call the unified backend function
-        if mimetype == 'image/jpeg':
-             image_sign.sign_image(input_path)
-        else:
-             video_sign.sign_video(input_path)
-        
-        # Return the original file (provenance is stored separately on disk)
-        # In a real app we might zip them or embed metadata.
-        # For this prototype, we just return the file availability.
-        return send_file(input_path, mimetype=mimetype)
-
-    except Exception as e:
-        print(f"Processing Error: {e}")
-        return {'error': 'Processing failed', 'details': str(e)}, 500
+    # Submit Job
+    job_id = job_manager.submit_job(process_protect_async, input_path, mimetype)
+    return {"job_id": job_id, "input_path": unique_filename}
 
 @app.route('/api/verify', methods=['POST'])
 def verify_media():
@@ -115,65 +157,32 @@ def verify_media():
     
     filename = file.filename
     ext = os.path.splitext(filename)[1].lower()
-    input_path = os.path.join(BASE_DIR, f'input{ext}')
+    # Handles...
+    import uuid
+    unique_filename = f"verify_{uuid.uuid4().hex}{ext}"
+    input_path = os.path.join(BASE_DIR, unique_filename)
     file.save(input_path)
 
     mimetype = 'video/mp4'
     if ext in ['.jpg', '.jpeg', '.png']:
         mimetype = 'image/jpeg'
 
-    # Handle Optional Public Key from User (Same for both Video and Image)
-    # Default to Device Identity
-    verify_key_path = PUBLIC_KEY_PATH
-    
-    if 'key' in request.form and request.form['key'].strip():
-        try:
-            user_key = request.form['key'].strip()
-            # Simple validation: check header/footer
-            if "BEGIN PUBLIC KEY" in user_key:
-                # Video backend: Use a TEMP file, do NOT overwrite Device Identity
-                temp_key_path = os.path.join(BASE_DIR, 'temp_verify_key.pem')
-                with open(temp_key_path, 'w') as f:
-                    f.write(user_key)
-                
-                verify_key_path = temp_key_path
-                print("Using provided user public key (Temporary).")
-                
-
-                    
-        except Exception as e:
-            print(f"Error saving user key: {e}")
-
-
-
     if not VIDEO_BACKEND_AVAILABLE:
         return {'error': 'Backend not available', 'details': VIDEO_IMPORT_ERROR}, 501
 
-    try:
-        # Unified Verification
-        if mimetype == 'image/jpeg':
-            report = image_verify.verify_image(input_path, public_key_path=verify_key_path)
-        else:
-            report = video_verify.verify_video(input_path, public_key_path=verify_key_path)
-        
-        status = report.get('status', 'UNKNOWN')
-        # Map internal status to API status if needed, or pass through
-        # Current UI expects: VERIFIED, AUTHENTIC, or TAMPERED (or FAILED)
-        
-        # video_verify returns: VERIFIED (success), FAILED (hash mismatch), or throws for Sig failure
-        # Let's align with UI expectations
-        if status == "VERIFIED":
-             # "VERIFIED" is good.
-             pass
-        elif status == "FAILED":
-            status = "TAMPERED" # UI treats non-verified as Tamper Detected usually
-        
-        return {'status': status, 'details': report}
+    # Submit Job
+    # Check key
+    final_key_path = PUBLIC_KEY_PATH
+    if 'key' in request.form and request.form['key'].strip():
+         user_key = request.form['key'].strip()
+         if "BEGIN PUBLIC KEY" in user_key:
+             temp_key_path = os.path.join(BASE_DIR, f'temp_key_{uuid.uuid4().hex}.pem')
+             with open(temp_key_path, 'w') as f:
+                 f.write(user_key)
+             final_key_path = temp_key_path
 
-    except Exception as e:
-        print(f"Verification Error: {e}")
-        # If signature fails, it might raise InvalidSignature
-        return {'status': 'TAMPERED', 'details': str(e)}
+    job_id = job_manager.submit_job(process_verify_async, input_path, mimetype, final_key_path)
+    return {"job_id": job_id}
 
 @app.route('/api/public-key')
 def get_public_key():
