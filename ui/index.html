@@ -97,7 +97,7 @@
 </head>
 
 <body
-    class="bg-ink-950 text-white font-sans min-h-screen flex flex-col selection:bg-white selection:text-ink-950 overflow-x-hidden">
+    class="bg-ink-950 text-white font-sans h-screen flex flex-col selection:bg-white selection:text-ink-950 overflow-hidden">
 
     <!-- Background Texture -->
     <div class="fixed inset-0 pointer-events-none z-0">
@@ -305,7 +305,7 @@
                 </div>
             </div>
             <!-- SECURED BY STRIP (Bottom Fixed on Desktop, Relative on Mobile) -->
-            <div class="w-full border-t border-white/5 bg-[#0B0C0E]/50 backdrop-blur-sm z-50 mt-auto">
+            <div class="w-full border-t border-white/5 bg-[#0B0C0E]/50 backdrop-blur-sm z-50 absolute bottom-1 left-0">
                 <div
                     class="max-w-[1600px] mx-auto px-4 md:px-8 py-6 flex flex-wrap justify-between items-center gap-4 md:gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                     <div
@@ -404,7 +404,7 @@
                     <div id="uploadState"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500">
                         <input type="file" id="fileInput" class="hidden"
-                            accept="image/*,video/mp4,video/quicktime,video/x-msvideo">
+                            accept="image/*,video/mp4,video/quicktime,video/x-msvideo,.pdf">
                         <label for="fileInput"
                             class="cursor-pointer flex flex-col items-center gap-6 group-hover/upload:scale-105 transition-transform duration-500">
                             <div
@@ -417,7 +417,7 @@
                             </div>
                             <div class="text-center">
                                 <span class="text-lg text-white font-medium block mb-1">Select Asset</span>
-                                <span class="text-sm text-zinc-500">Images & Videos up to 500MB</span>
+                                <span class="text-sm text-zinc-500">Image, Video & PDF up to 500MB</span>
                             </div>
                         </label>
                     </div>
@@ -427,6 +427,14 @@
                         class="absolute inset-0 flex items-center justify-center bg-[#0B0C0E] opacity-0 pointer-events-none transition-opacity duration-500">
                         <img id="resultImage" class="w-full h-full object-contain p-8 hidden" />
                         <video id="resultVideo" class="w-full h-full object-contain p-8 hidden" controls></video>
+                        <div id="resultPdf"
+                            class="w-full h-full flex flex-col items-center justify-center p-8 hidden text-zinc-400">
+                            <svg class="w-24 h-24 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="1"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-lg font-mono">PDF DOCUMENT</span>
+                        </div>
                     </div>
                 </div>
 
@@ -610,8 +618,9 @@
 
         // UI Elements
         const uploadState = document.getElementById('uploadState');
-        const resultState = document.getElementById('resultState');
         const resultImage = document.getElementById('resultImage');
+        const resultVideo = document.getElementById('resultVideo');
+        const resultPdf = document.getElementById('resultPdf');
         const loading = document.getElementById('loading');
         const loadingText = document.getElementById('loadingText');
         const appTitle = document.getElementById('appTitle');
@@ -636,6 +645,7 @@
         // Toggle Logic
         let currentMode = 'sign';
         let currentDownloadUrl = null;
+        let currentDownloadName = 'hemlock_signed_asset';
         const modeSign = document.getElementById('modeSign');
         const modeVerify = document.getElementById('modeVerify');
 
@@ -669,13 +679,14 @@
         function resetUI() {
             pendingFile = null;
             currentDownloadUrl = null;
+            currentDownloadName = 'hemlock_signed_asset';
             // Reset Left Column
             resultState.classList.add('opacity-0', 'pointer-events-none');
             uploadState.classList.remove('opacity-0', 'pointer-events-none');
 
             // Restore Original Upload State HTML
             uploadState.innerHTML = `
-        <input type="file" id="fileInput" class="hidden" accept="image/*,video/mp4,video/quicktime,video/x-msvideo">
+        <input type="file" id="fileInput" class="hidden" accept="image/*,video/mp4,video/quicktime,video/x-msvideo,.pdf">
         <label for="fileInput"
             class="cursor-pointer flex flex-col items-center gap-6 group-hover/upload:scale-105 transition-transform duration-500">
             <div
@@ -686,7 +697,7 @@
             </div>
             <div class="text-center">
                 <span class="text-lg text-white font-medium block mb-1">Select Asset</span>
-                <span class="text-sm text-zinc-500">Images & Videos up to 500MB</span>
+                <span class="text-sm text-zinc-500">Image, Video & PDF up to 500MB</span>
             </div>
         </label>
         `;
@@ -716,7 +727,7 @@
             if (currentDownloadUrl) {
                 const a = document.createElement('a');
                 a.href = currentDownloadUrl;
-                a.download = 'hemlock_signed_asset';
+                a.download = currentDownloadName;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -765,7 +776,11 @@
 
             if (currentMode === 'sign') {
                 loading.classList.remove('opacity-0', 'pointer-events-none');
-                loadingText.textContent = 'Injecting Adversarial Noise...';
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    loadingText.textContent = 'Signing Document...';
+                } else {
+                    loadingText.textContent = 'Injecting Adversarial Noise...';
+                }
                 await handleSignFlow(file);
             } else {
                 // VERIFY MODE: STAGE FILE
@@ -806,7 +821,17 @@
                         } else {
                             // Update UI
                             // User Request: "Signing only" (No "Adding Noise" text)
-                            const label = currentMode === 'sign' ? 'Signing...' : 'Verifying...';
+                            // Logic: If PDF, say "Signing Document...". If Image/Video, say "Injecting Adversarial Noise..."
+                            let label = 'Processing...';
+                            if (currentMode === 'sign') {
+                                if (pendingFile && (pendingFile.type === 'application/pdf' || pendingFile.name.toLowerCase().endsWith('.pdf'))) {
+                                    label = 'Signing Document...';
+                                } else {
+                                    label = 'Injecting Adversarial Noise...';
+                                }
+                            } else {
+                                label = 'Verifying...';
+                            }
                             loadingText.textContent = label;
                         }
                     } catch (e) {
@@ -848,10 +873,16 @@
                     resultImage.src = url;
                     resultImage.classList.remove('hidden');
                     resultVideo.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
+                } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    resultPdf.classList.remove('hidden');
+                    resultImage.classList.add('hidden');
+                    resultVideo.classList.add('hidden');
                 } else {
                     resultVideo.src = url;
                     resultVideo.classList.remove('hidden');
                     resultImage.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
                 }
 
                 uploadState.classList.add('opacity-0', 'pointer-events-none');
@@ -862,6 +893,7 @@
 
                 // Enable Download
                 currentDownloadUrl = url;
+                currentDownloadName = 'hemlock_signed_' + file.name;
                 downloadBtn.classList.remove('opacity-50', 'pointer-events-none');
 
             } catch (error) {
@@ -909,10 +941,16 @@
                     resultImage.src = url;
                     resultImage.classList.remove('hidden');
                     resultVideo.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
+                } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    resultPdf.classList.remove('hidden');
+                    resultImage.classList.add('hidden');
+                    resultVideo.classList.add('hidden');
                 } else {
                     resultVideo.src = url;
                     resultVideo.classList.remove('hidden');
                     resultImage.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
                 }
 
                 uploadState.classList.add('opacity-0', 'pointer-events-none');
@@ -951,8 +989,8 @@
 
             ${file.type.startsWith('image/')
                             ? `<div class="flex justify-between"><span>Type:</span> <span class="text-white">Image</span></div>`
-                            : `<div class="flex justify-between"><span>Total Frames:</span> <span
-                    class="text-white">${d.total_expected_frames || 'Unknown'}</span></div>`
+                            : (file.type === 'application/pdf' ? `<div class="flex justify-between"><span>Type:</span> <span class="text-white">PDF Document</span></div>` : `<div class="flex justify-between"><span>Total Frames:</span> <span
+                    class="text-white">${d.total_expected_frames || 'Unknown'}</span></div>`)
                         }
 
             ${d.failure_type ? `<div class="flex justify-between text-red-400"><span>Reason:</span>
@@ -977,10 +1015,16 @@
                     resultImage.src = url;
                     resultImage.classList.remove('hidden');
                     resultVideo.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
+                } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    resultPdf.classList.remove('hidden');
+                    resultImage.classList.add('hidden');
+                    resultVideo.classList.add('hidden');
                 } else {
                     resultVideo.src = url;
                     resultVideo.classList.remove('hidden');
                     resultImage.classList.add('hidden');
+                    resultPdf.classList.add('hidden');
                 }
 
                 // Show Result UI with Failure

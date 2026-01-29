@@ -14,7 +14,10 @@ try:
     import video_sign
     import video_verify
     import image_sign
+    import image_sign
     import image_verify
+    import pdf_sign
+    import pdf_verify
     from job_manager import job_manager
     VIDEO_BACKEND_AVAILABLE = True
 except ImportError as e:
@@ -100,6 +103,8 @@ def process_protect_async(input_path, mimetype):
     try:
         if mimetype == 'image/jpeg':
              image_sign.sign_image(input_path)
+        elif mimetype == 'application/pdf':
+             pdf_sign.sign_pdf(input_path)
         else:
              video_sign.sign_video(input_path)
         return {"file_path": input_path, "mimetype": mimetype}
@@ -110,6 +115,8 @@ def process_verify_async(input_path, mimetype, verify_key_path):
     try:
         if mimetype == 'image/jpeg':
             report = image_verify.verify_image(input_path, public_key_path=verify_key_path)
+        elif mimetype == 'application/pdf':
+            report = pdf_verify.verify_pdf(input_path, public_key_path=verify_key_path)
         else:
             report = video_verify.verify_video(input_path, public_key_path=verify_key_path)
         
@@ -139,11 +146,19 @@ def protect_media():
         return {'error': 'No selected file'}, 400
 
     filename = file.filename
-    # Determine extension to serve back correctly or just default to mp4/jpg
+    # Determine mimetype based on extension
     ext = os.path.splitext(filename)[1].lower()
-    mimetype = 'video/mp4' # Default for video backend output if unchanged
+    mimetype = None
+    
     if ext in ['.jpg', '.jpeg', '.png']:
         mimetype = 'image/jpeg' 
+    elif ext == '.pdf':
+        mimetype = 'application/pdf'
+    elif ext in ['.mp4', '.mov', '.avi', '.mkv']:
+        mimetype = 'video/mp4'
+    
+    if mimetype is None:
+        return {'error': 'Unsupported file type'}, 400 
 
     if not VIDEO_BACKEND_AVAILABLE:
         return {'error': 'Backend not available', 'details': VIDEO_IMPORT_ERROR}, 501
@@ -181,9 +196,18 @@ def verify_media():
     input_path = os.path.join(BASE_DIR, unique_filename)
     file.save(input_path)
 
-    mimetype = 'video/mp4'
+    mimetype = None
     if ext in ['.jpg', '.jpeg', '.png']:
         mimetype = 'image/jpeg'
+    elif ext == '.pdf':
+        mimetype = 'application/pdf'
+    elif ext in ['.mp4', '.mov', '.avi', '.mkv']:
+        mimetype = 'video/mp4'
+        
+    if mimetype is None:
+        # If verify uploaded a non-supported file, we likely should error or just try to verify as video?
+        # Better to error.
+        return {'error': 'Unsupported file type'}, 400
 
     if not VIDEO_BACKEND_AVAILABLE:
         return {'error': 'Backend not available', 'details': VIDEO_IMPORT_ERROR}, 501
