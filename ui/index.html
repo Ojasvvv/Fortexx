@@ -204,7 +204,7 @@
 
                     <!-- RIGHT COLUMN: TABBED INFO -->
                     <div
-                        class="flex flex-col h-auto lg:h-[600px] w-full max-w-lg opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.4s_forwards] pb-24 md:pb-0">
+                        class="relative z-[80] flex flex-col h-auto lg:h-[600px] w-full max-w-lg opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.4s_forwards] pb-24 md:pb-0 mt-0 lg:mt-32">
 
                         <!-- TAB HEADERS -->
                         <div class="flex gap-8 border-b border-white/10 pb-4 mb-8">
@@ -373,7 +373,8 @@
         </header>
 
         <!-- CENTRAL CONTAINER -->
-        <div class="w-full max-w-6xl px-6 flex flex-col items-center justify-center relative z-50">
+        <div
+            class="w-full max-w-6xl px-6 flex flex-col items-center justify-start pt-32 md:justify-center md:pt-0 relative z-50">
 
             <!-- Header -->
             <div class="text-center mb-10">
@@ -804,7 +805,9 @@
                             reject(job.error || "Job Failed");
                         } else {
                             // Update UI
-                            loadingText.textContent = `Processing... (${job.status})`;
+                            // User Request: "Signing only" (No "Adding Noise" text)
+                            const label = currentMode === 'sign' ? 'Signing...' : 'Verifying...';
+                            loadingText.textContent = label;
                         }
                     } catch (e) {
                         clearInterval(interval);
