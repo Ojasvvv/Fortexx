@@ -79,6 +79,10 @@ if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
     except Exception as e:
         print(f"Failed to generate keys: {e}")
 
+@app.route('/health')
+def health_check():
+    return {'status': 'alive', 'service': 'hemlock-engine'}, 200
+
 @app.route('/')
 def serve_index():
     return send_from_directory('ui', 'index.html')
