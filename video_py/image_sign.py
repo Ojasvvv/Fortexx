@@ -57,22 +57,30 @@ def sign_image(image_path: str):
             b_hash = content_hash(block_bytes)
             block_hashes.append(b_hash.hex())
 
+    import uuid
+    prov_id = uuid.uuid4().hex[:8]
+    
     # Save Hash Map
     provenance_data = {
+        "id": prov_id,
         "grid": [GRID_ROWS, GRID_COLS],
         "hashes": block_hashes
     }
     
-    prov_path = "provenance/image_hashes.json"
+    prov_filename = f"hashes_{prov_id}.json"
+    prov_path = os.path.join("provenance", prov_filename)
+    
     with open(prov_path, "w") as f:
         json.dump(provenance_data, f)
 
-    # Sign the Provenance Data (ensure integrity of the map)
-    # We sign the JSON string of hashes to ensure the map itself isn't tampered with
+    # Sign the Provenance Data
     data_to_sign = json.dumps(provenance_data, sort_keys=True).encode()
     signature = private_key.sign(data_to_sign, ec.ECDSA(hashes.SHA256()))
 
-    with open("provenance/image_sig.bin", "wb") as f:
+    sig_filename = f"sig_{prov_id}.bin"
+    sig_path = os.path.join("provenance", sig_filename)
+
+    with open(sig_path, "wb") as f:
         f.write(signature)
 
     print(f"Image signed with 8x8 Grid. Hashes saved to {prov_path}")
