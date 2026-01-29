@@ -1,103 +1,133 @@
-# HEMLOCK: Cryptographic Provenance & Media Defense Engine
+# HEMLOCK
+### Verifiable Media Engine & Cryptographic Provenance Protocol
 
-Hemlock is a **verifiable media engine** designed to protect creative work in the age of generative AI. It combines **adversarial perturbations** (to disrupt unauthorized AI training) with **cryptographic signatures** (to establish mathematical provenance).
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Version](https://img.shields.io/badge/Version-1.0.5-blue)
+![Python](https://img.shields.io/badge/Python-3.8%2B-yellow)
+![License](https://img.shields.io/badge/License-MIT-green)
 
----
+> **"Truth in the age of synthesis."**
 
-## 🛡️ Core Technologies
-
-### 1. Defense Layer (Adversarial Injection)
-Hemlock scans media assets for high-frequency texture regions vulnerable to latent space decoding. It then injects **imperceptible adversarial noise** that "poisons" feature extraction, preventing AI models from effectively training on or replicating the style of your work.
-
-### 2. Provenance Layer (Digital Signatures)
-Every processed asset is cryptographically signed using **RSA-2048 / ECDSA-P256**. This creates an immutable link between the creator (Device Identity) and the content. Verification can be performed offline using the public key.
+Hemlock is a dual-layer defense system designed to restore trust in digital media. As Generative AI models scrape the web to train on unauthorized data, Hemlock provides creators with an **Invisible Armor** against style theft and a **Cryptographic Seal** to prove authenticity.
 
 ---
 
-## 🚀 Installation & Setup
+## � The Problem
+We are witnessing the **erosion of digital trust**.
+*   **Deepfakes** manipulate public opinion.
+*   **Style Mimicry** threatens the livelihood of digital artists.
+*   **Verification Gap**: There is no standard way to prove a file is "human-made" or "original" once it leaves the creator's device.
+
+## 🛡️ The Solution
+Hemlock introduces a "Scan -> Inject -> Sign" pipeline:
+
+1.  **Adversarial Defense (The Shield)**:
+    *   Injects mathematical perturbations into the image/video.
+    *   **Invisible to Humans**: The image looks identical.
+    *   **Blinding to Machines**: Disrupts feature extraction, preventing AI models from learning the style or likeness.
+
+2.  **Cryptographic Provenance (The Seal)**:
+    *   Hashes the protected content (SHA-256).
+    *   Signs it with a **Device Identity Key** (RSA-2048 / ECDSA).
+    *   Creates a tamper-evident record. Any pixel modification breaks the seal.
+
+---
+
+## ✨ Key Features
+*   **🎨 Style Protection**: Prevents Midjourney/Stable Diffusion from cloning your artistic style.
+*   **🔒 Tamper Detection**: Instantly identifies if an image has been Photoshopped or AI-edited.
+*   **📍 Visual Localization**: Generates a "Heat Map" showing exactly *where* the image was manipulated.
+*   **⚡ High-Performance Backend**: Pure Python engine optimized for media processing.
+*   **📱 Modern UI**: Responsive, glassmorphic interface built with Tailwind CSS.
+
+---
+
+## �️ Technology Stack
+*   **Backend**: Python (Flask)
+*   **Core Logic**: `numpy`, `imageio`, `cryptography`
+*   **Frontend**: HTML5, Vanilla JS, Tailwind CSS
+*   **Deployment**: Ready for Render / Heroku / Docker
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- **Python 3.8+**
-- **pip** (Python Package Manager)
+*   Python 3.8 or higher
+*   `pip` (Python Package Manager)
 
-### 1. Initialize the Environment
-The project is self-contained. Install the required Python dependencies:
+### Installation
 
-```bash
-pip install flask cryptography numpy imageio imageio[ffmpeg]
-```
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/your-username/hemlock.git
+    cd hemlock
+    ```
 
-### 2. Device Identity Generation
-On the first run, the server automatically generates a unique **Device Identity** keypair (`private_key.pem`, `public_key.pem`) in the `keys/` directory.
-- **Private Key**: Kept secret on your device. Used to sign assets.
-- **Public Key**: Shared with others to verify asset authenticity.
+2.  **Install Dependencies**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *(Note: Ensure `ffmpeg` is installed for video processing. `imageio[ffmpeg]` usually handles this automatically.)*
+
+3.  **Run the Server**
+    ```bash
+    python server.py
+    ```
+
+4.  **Access the App**
+    Open your browser and navigate to: `http://localhost:5000`
 
 ---
 
-## 🖥️ Usage
+## 🔑 Key Management (Security)
 
-### Start the Engine
-Run the Python server to start the local engine and UI:
+Hemlock uses a Public/Private key infrastructure.
 
-```bash
-python server.py
-```
+**Local Development:**
+*   On first run, keys are auto-generated in the `keys/` directory.
 
-Access the interface at: **`http://localhost:5000`**
+**Production (Render/Cloud):**
+*   **Do not commit keys to Git.** (The `.gitignore` handles this).
+*   Set your identity via Environment Variables:
+    *   `PRIVATE_KEY`: Content of `keys/private_key.pem`
+    *   `PUBLIC_KEY`: Content of `keys/public_key.pem`
 
-### Modes of Operation
+---
 
-#### ✍️ **SIGN (Protect)**
-1.  Navigate to the **Injection Console**.
-2.  Upload an Image or Video (mp4, mov).
-3.  The engine will:
-    - Analyze the visual frequencies.
-    - Inject adversarial protection.
-    - Sign the file with your Private Key.
+## 📸 Usage Guide
+
+### 1. Protect (Sign)
+1.  Upload your artwork or footage.
+2.  Hemlock injects the adversarial noise (~2-5s).
+3.  The file is signed.
 4.  **Download** the protected asset.
-5.  **Copy** your Public Key (shown in the panel) to share with verifiers.
 
-#### 🔍 **VERIFY (Authenticate)**
-1.  Switch to **Verify** mode.
-2.  Upload a suspicious or protected file.
-3.  Paste the **Public Key** of the creator (or use your own).
-4.  The engine will validate:
-    - **Integrity**: Has the file been tampered with? (Pixel-level checks)
-    - **Authenticity**: Was it signed by the owner of this key?
-5.  View detailed reports: `AUTHENTIC`, `TAMPER DETECTED`, or `WRONG KEY`.
+### 2. Authenticate (Verify)
+1.  Upload a suspicious file.
+2.  Provide the creator's **Public Key**.
+3.  Hemlock verifies the signature and hash map.
+4.  **Result**:
+    *   ✅ **VERIFIED**: Authentic, original media.
+    *   ❌ **TAMPER DETECTED**: File has been altered. (View the red localized map to see where).
 
 ---
 
-## 🏗️ Architecture
-
-The project follows a clean, flat architecture in the `Hemlock/` directory.
-
+## 📂 Project Structure
 ```
 Hemlock/
-├── server.py              # Flask Backend (API & Static Serving)
-├── ui/                    # Frontend Application
-│   └── index.html         # Single-Page UI (HTML/Tailwind/JS)
-├── video_py/              # Core Processing Modules
-│   ├── video_sign.py      # Signing Logic (Hashing & Metadata)
-│   ├── video_verify.py    # Verification Logic
-│   └── video_utils.py     # Shared Utilities (Frame Extraction)
-├── keys/                  # Generated Identity Keys (Auto-created)
-└── provenance/            # Local ledger of signed hashes (Prototype)
+├── server.py              # Main Flask Application
+├── python_backend/        # Core Verification & Signing Logic
+│   ├── image_sign.py      # Image Hashing & Defense
+│   ├── image_verify.py    # Multi-Provenance Verification
+│   └── video_utils.py     # Frame extraction utilities
+├── ui/                    # Frontend Assets
+│   └── index.html         # Main Application Interface
+├── provenance/            # Local ledger (Stores Hashes/Signatures)
+└── presentation/          # Interactive Project Slides
 ```
 
-### Tech Stack
-- **Backend**: Python (Flask)
-- **Frontend**: HTML5, Vanilla JavaScript, TailwindCSS
-- **Cryptography**: `cryptography` library (RSA/ECDSA)
-- **Media Processing**: `imageio`, `numpy`
-
 ---
 
-## ⚠️ Notes
-- **Performance**: Video processing (frame extraction & hashing) is compute-intensive. Large 4K files may take time.
-- **Adversarial Noise**: The "glitch" or noise is designed to be invisible to humans but highly disruptive to machines.
-- **Key Safety**: Never share your `private_key.pem`. If lost, previous assets cannot be re-signed with the same identity.
-
----
-
-**System Online // v1.0.4**
+**© 2026 Hemlock Project.**
+*Built for the Future of Media.*

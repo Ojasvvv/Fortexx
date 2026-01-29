@@ -4,13 +4,13 @@ from flask import Flask, request, send_file, send_from_directory
 
 # Add CWD to system path so we can import video_py modules if needed
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# Also add the video_py subdirectory so 'import video_utils' works inside those scripts
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'video_py'))
+# Also add the python_backend subdirectory so 'import video_utils' works inside those scripts
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'python_backend'))
 
 # Import Video Backend
 VIDEO_IMPORT_ERROR = None
 try:
-    # Import directly since we added video_py to path
+    # Import directly since we added python_backend to path
     import video_sign
     import video_verify
     import image_sign
@@ -31,6 +31,24 @@ PRIVATE_KEY_PATH = os.path.join(KEYS_DIR, 'private_key.pem')
 PUBLIC_KEY_PATH = os.path.join(KEYS_DIR, 'public_key.pem')
 
 # Ensure Device Keys Exist on Startup
+# Priority 1: Load from Environment (Render / Production)
+if os.environ.get('PRIVATE_KEY') and os.environ.get('PUBLIC_KEY'):
+    try:
+        Path(KEYS_DIR).mkdir(exist_ok=True)
+        # We assume the keys are passed as PEM strings in the Env Vars
+        # Newlines might need handling if they are escaped as \n
+        priv_env = os.environ['PRIVATE_KEY'].replace('\\n', '\n')
+        pub_env = os.environ['PUBLIC_KEY'].replace('\\n', '\n')
+        
+        with open(PRIVATE_KEY_PATH, "w") as f:
+            f.write(priv_env)
+        with open(PUBLIC_KEY_PATH, "w") as f:
+            f.write(pub_env)
+        print("✔ Loaded Device Keys from Environment Variables")
+    except Exception as e:
+        print(f"Failed to load keys from environment: {e}")
+
+# Priority 2: Generate New Keys if missing (Local Dev)
 if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
     print("Generating Device Identity Keys...")
     try:
