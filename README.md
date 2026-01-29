@@ -113,6 +113,32 @@ Hemlock uses a Public/Private key infrastructure.
 
 ---
 
+## 🎓 Try It Yourself (The "Doodle" Test)
+Want to see Hemlock in action? Follow this 1-minute loop:
+
+### 1. The Creator (Sign)
+1.  Switch to **Sign Mode** in the app.
+2.  Upload any image.
+3.  **IMPORTANT**: Copy the `Public Key` shown in the black box. (Paste it in Notepad for a second).
+4.  Download your signed image.
+
+### 2. The Attacker (Tamper)
+Now, let's break the seal.
+1.  Open your downloaded image in **Paint**, **Photoshop**, or even an **AI Editor**.
+2.  Draw a mustache, change a pixel, or let AI "change" it.
+3.  Save the file.
+    *   *Note: If you convert the file type (e.g., PNG to JPG), Hemlock considers the entire file changed!*
+
+### 3. The Detective (Verify)
+1.  Switch to **Verify Mode** in Hemlock.
+2.  Upload your "tampered" image.
+3.  Paste the `Public Key` you saved earlier.
+4.  Watch the magic:
+    *   **Result**: ❌ TAMPER DETECTED.
+    *   **Heatmap**: See exactly where you drew that mustache!
+
+---
+
 ## 📂 Project Structure
 ```
 Hemlock/
