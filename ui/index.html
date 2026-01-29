@@ -114,11 +114,11 @@
 
         <!-- VIEW 1: LANDING -->
         <main id="landing-view"
-            class="absolute inset-0 w-full h-full flex flex-col z-40 transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) overflow-hidden">
+            class="absolute inset-0 w-full h-full flex flex-col z-40 transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) overflow-y-auto md:overflow-hidden">
 
             <!-- TOP HEADER (Navigation) -->
             <header
-                class="absolute top-0 left-0 w-full z-50 px-8 md:px-12 py-8 flex justify-between items-start opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.1s_forwards]">
+                class="absolute top-0 left-0 w-full z-50 px-4 md:px-12 py-8 flex justify-between items-start opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.1s_forwards]">
                 <!-- Logo -->
                 <div class="flex flex-col gap-1 z-10 w-48">
                     <span class="text-xl font-bold tracking-[0.2em] text-white uppercase">HEMLOCK</span>
@@ -159,9 +159,9 @@
 
 
             <!-- HERO SECTION (Fixed Screen) -->
-            <div class="w-full h-full flex flex-col justify-center relative">
+            <div class="w-full h-full flex flex-col justify-center relative min-h-[800px] md:min-h-0">
                 <div
-                    class="w-full max-w-[1600px] px-8 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 relative z-10 pt-32 pb-12 items-center mx-auto">
+                    class="w-full max-w-[1600px] px-4 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 relative z-10 pt-32 pb-24 md:pb-12 items-center mx-auto">
                     <!-- LEFT COLUMN: HERO (Dominant) -->
                     <div class="flex flex-col items-start text-left gap-8 self-center">
 
@@ -170,7 +170,7 @@
 
 
                         <h1
-                            class="text-6xl md:text-[7rem] leading-[0.9] font-medium tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 pb-2 opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.2s_forwards]">
+                            class="text-4xl md:text-6xl lg:text-[7rem] leading-[0.9] font-medium tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 pb-2 opacity-0 animate-[reveal_0.6s_cubic-bezier(0.2,0.8,0.2,1)_0.2s_forwards]">
                             Cryptographic<br>
                             provenance.
                         </h1>
@@ -332,10 +332,10 @@
 
     <!-- VIEW 2: APP (The "Tool") -->
     <main id="app-view"
-        class="absolute inset-0 w-full h-full z-30 flex flex-col items-center justify-center opacity-0 translate-y-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none">
+        class="absolute inset-0 w-full h-full z-30 flex flex-col items-center justify-center opacity-0 translate-y-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-none overflow-y-auto md:overflow-hidden">
 
         <!-- APP HEADER (Common Layout) -->
-        <header class="absolute top-0 left-0 w-full z-50 px-8 md:px-12 py-8 flex justify-between items-start">
+        <header class="absolute top-0 left-0 w-full z-50 px-4 md:px-12 py-8 flex justify-between items-start">
             <!-- Logo -->
             <div class="flex flex-col gap-1 z-10 w-48">
                 <span class="text-xl font-bold tracking-[0.2em] text-white uppercase">HEMLOCK</span>
@@ -386,7 +386,7 @@
 
             <!-- SPLIT LAYOUT CARD -->
             <div
-                class="w-full bg-[#131416] border border-white/5 rounded-2xl overflow-hidden relative shadow-2xl transition-all duration-500 group grid grid-cols-1 md:grid-cols-2 h-[550px]">
+                class="w-full bg-[#131416] border border-white/5 rounded-2xl overflow-hidden relative shadow-2xl transition-all duration-500 group grid grid-cols-1 md:grid-cols-2 h-auto md:h-[550px]">
 
 
                 <!-- LEFT COL: IMAGE INTERACTION -->
@@ -434,8 +434,11 @@
                             </p>
                         </div>
 
-                        <div
-                            class="p-4 rounded-lg bg-[#0B0C0E] border border-white/10 h-32 overflow-hidden relative w-full">
+                        <div id="keyContainer"
+                            class="p-4 rounded-lg bg-[#0B0C0E] border border-white/10 h-32 overflow-hidden relative w-full cursor-pointer hover:border-white/30 transition-colors group">
+                            <div id="copyFeedback"
+                                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 text-[10px] text-white px-2 py-1 rounded pointer-events-none">
+                                Click to Copy</div>
                             <pre id="keyDisplay"
                                 class="font-mono text-[10px] text-zinc-500 break-all whitespace-pre-wrap h-full overflow-y-auto">Waiting for generation...</pre>
                         </div>
@@ -666,6 +669,32 @@
             }
         });
 
+        // Copy Key Handler
+        const keyContainer = document.getElementById('keyContainer');
+        const copyFeedback = document.getElementById('copyFeedback');
+
+        keyContainer.addEventListener('click', () => {
+            const text = keyDisplay.textContent;
+            if (!text || text.includes('Waiting') || text === "Key unavailable") return;
+
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual Feedback
+                copyFeedback.textContent = "Copied!";
+                copyFeedback.classList.remove('opacity-0', 'bg-zinc-800');
+                copyFeedback.classList.add('opacity-100', 'bg-green-600');
+                keyContainer.classList.add('border-green-500/50');
+
+                setTimeout(() => {
+                    copyFeedback.textContent = "Click to Copy";
+                    copyFeedback.classList.add('opacity-0', 'bg-zinc-800');
+                    copyFeedback.classList.remove('opacity-100', 'bg-green-600');
+                    keyContainer.classList.remove('border-green-500/50');
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        });
+
         // Manual Verify Trigger
         verifyActionBtn.addEventListener('click', async () => {
             if (pendingFile) {
@@ -809,6 +838,12 @@
                     // Specific Error Feedback
                     if (data.details && data.details.failure_type === 'SIGNATURE_MISMATCH') {
                         verifyText.textContent = "WRONG SIGNING KEY";
+                    } else if (data.details && data.details.tamper_map) {
+                        verifyText.textContent = "VISUAL TAMPER DETECTED";
+                        // Load the Red Overlay Map
+                        // Extract filename from path (provenance/tamper_map.png -> tamper_map.png)
+                        const filename = data.details.tamper_map.split(/[/\\]/).pop();
+                        resultImage.src = `/provenance/${filename}?t=${Date.now()}`;
                     } else {
                         verifyText.textContent = "TAMPER DETECTED";
                     }

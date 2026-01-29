@@ -13,6 +13,8 @@ try:
     # Import directly since we added video_py to path
     import video_sign
     import video_verify
+    import image_sign
+    import image_verify
     VIDEO_BACKEND_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Video backend not available: {e}")
@@ -20,6 +22,7 @@ except ImportError as e:
     VIDEO_BACKEND_AVAILABLE = False
 
 app = Flask(__name__, static_folder='ui', static_url_path='')
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB Limit
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KEYS_DIR = os.path.join(BASE_DIR, 'keys')
@@ -58,6 +61,10 @@ if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
 def serve_index():
     return send_from_directory('ui', 'index.html')
 
+@app.route('/provenance/<path:filename>')
+def serve_provenance(filename):
+    return send_from_directory('provenance', filename)
+
 @app.route('/api/protect', methods=['POST'])
 def protect_media():
     if 'file' not in request.files:
@@ -83,8 +90,10 @@ def protect_media():
     
     try:
         # Call the unified backend function
-        # Note: video_sign modifies/reads "provenance" relative to its execution.
-        video_sign.sign_video(input_path)
+        if mimetype == 'image/jpeg':
+             image_sign.sign_image(input_path)
+        else:
+             video_sign.sign_video(input_path)
         
         # Return the original file (provenance is stored separately on disk)
         # In a real app we might zip them or embed metadata.
@@ -108,6 +117,10 @@ def verify_media():
     ext = os.path.splitext(filename)[1].lower()
     input_path = os.path.join(BASE_DIR, f'input{ext}')
     file.save(input_path)
+
+    mimetype = 'video/mp4'
+    if ext in ['.jpg', '.jpeg', '.png']:
+        mimetype = 'image/jpeg'
 
     # Handle Optional Public Key from User (Same for both Video and Image)
     # Default to Device Identity
@@ -138,8 +151,10 @@ def verify_media():
 
     try:
         # Unified Verification
-        # video_verify.verify_video returns a dict report
-        report = video_verify.verify_video(input_path, public_key_path=verify_key_path)
+        if mimetype == 'image/jpeg':
+            report = image_verify.verify_image(input_path, public_key_path=verify_key_path)
+        else:
+            report = video_verify.verify_video(input_path, public_key_path=verify_key_path)
         
         status = report.get('status', 'UNKNOWN')
         # Map internal status to API status if needed, or pass through

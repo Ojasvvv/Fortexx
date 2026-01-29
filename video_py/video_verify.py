@@ -42,6 +42,7 @@ def save_mismatch_overlay(video_path: str, frame_index: int):
             frame[:, :thickness, :] = [255, 0, 0]
             frame[:, -thickness:, :] = [255, 0, 0]
 
+            os.makedirs("provenance", exist_ok=True)
             out_path = f"provenance/mismatch_frame_{frame_index}.png"
             iio.imwrite(out_path, frame)
 
